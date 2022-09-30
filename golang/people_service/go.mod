@@ -1,4 +1,4 @@
-module github.com/PetrDoroshev/HomeWork_db/golang/people_service/
+module github.com/PetrDoroshev/HomeWork_db/golang/people_service
 
 go 1.19
 

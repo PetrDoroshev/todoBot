@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v4"
 )
@@ -11,7 +12,7 @@ type Store struct {
 }
 
 type People struct {
-	ID   int
+	ID   int32
 	Name string
 }
 
@@ -30,9 +31,36 @@ func NewStore(connString string) *Store {
 }
 
 func (s *Store) ListPeople() ([]People, error) {
-	return nil, nil
+
+	people := make([]People, 0, 0)
+
+	rows, err := s.conn.Query(context.Background(), "select * from people")
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+
+		values, err := rows.Values()
+		if err != nil {
+			return nil, fmt.Errorf("error while reding: %d", err)
+		}
+
+		people = append(people, People{
+			ID:   values[0].(int32),
+			Name: values[1].(string),
+		})
+	}
+
+	return people, nil
 }
 
 func (s *Store) GetPeopleByID(id string) (People, error) {
+
+	row, err := s.conn.Query(context.Background(), "select * from people where id = "+"id")
+	if err != nil {
+		return People{}, err
+	}
+
 	return People{}, nil
 }
