@@ -18,7 +18,7 @@ type storer interface {
 }
 
 type tax interface {
-	GetTaxStatusByID(id int) (string, error)
+	GetTaxStatusByID(id int32) (string, error)
 }
 
 type Service struct {

@@ -57,10 +57,14 @@ func (s *Store) ListPeople() ([]People, error) {
 
 func (s *Store) GetPeopleByID(id string) (People, error) {
 
-	row, err := s.conn.Query(context.Background(), "select * from people where id = "+"id")
+	var name string
+	var _id int32
+
+	row := s.conn.QueryRow(context.Background(), "select * from people where id = "+id)
+
+	err := row.Scan(&_id, &name)
 	if err != nil {
 		return People{}, err
 	}
-
-	return People{}, nil
+	return People{ID: _id, Name: name}, nil
 }

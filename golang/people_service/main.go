@@ -9,6 +9,11 @@ import (
 func main() {
 	s := store.NewStore("postgres://doroshev:doroshev@95.217.232.188:7777/doroshev")
 	people, _ := s.ListPeople()
-	fmt.Print(people)
+	fmt.Println(people)
+
+	person, err := s.GetPeopleByID("9")
+
+	fmt.Println(person)
+	fmt.Print(err)
 
 }
