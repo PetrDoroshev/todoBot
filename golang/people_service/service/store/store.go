@@ -3,8 +3,8 @@ package store
 import (
 	"context"
 	"fmt"
-
 	"github.com/jackc/pgx/v4"
+	"os"
 )
 
 type Store struct {
@@ -38,6 +38,7 @@ func (s *Store) ListPeople() ([]People, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 
@@ -50,6 +51,9 @@ func (s *Store) ListPeople() ([]People, error) {
 			ID:   values[0].(int32),
 			Name: values[1].(string),
 		})
+	}
+	if err := rows.Err(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error in rows: %v\n", err)
 	}
 
 	return people, nil
