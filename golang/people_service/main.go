@@ -11,9 +11,8 @@ func main() {
 	people, _ := s.ListPeople()
 	fmt.Println(people)
 
-	person, err := s.GetPeopleByID("9")
+	person, _ := s.GetPeopleByID("1")
 
 	fmt.Println(person)
-	fmt.Print(err)
 
 }
