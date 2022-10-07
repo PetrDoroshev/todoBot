@@ -193,3 +193,16 @@ $$ LANGUAGE plpgsql;
 SELECT get_the_youngest();
 
 --11
+CREATE OR REPLACE FUNCTION get_people_by_index(min_index FLOAT) RETURNS SETOF people_ AS
+$BODY$
+BEGIN
+   RETURN QUERY
+        SELECT * FROM people_
+        WHERE (people_.weight / (people_.growth * people_.growth)) > min_index;
+
+END
+$BODY$ LANGUAGE plpgsql;
+
+SELECT * FROM get_people_by_index(0.0025);
+
+--12
