@@ -141,5 +141,55 @@ $$ LANGUAGE plpgsql;
 
 SELECT lucas_numbers(0);
 
-
 --8
+CREATE OR REPLACE FUNCTION get_people_num(year INT) RETURNS INT
+AS $$
+DECLARE
+    num INT;
+BEGIN
+    SELECT COUNT(*) INTO num
+    FROM people_
+    WHERE date_part('year', birth_date) = year;
+
+    RETURN num;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT get_people_num(1995);
+
+--9
+CREATE OR REPLACE FUNCTION get_people_num_by_color(color VARCHAR) RETURNS INT
+AS $$
+DECLARE
+    num INT;
+BEGIN
+    SELECT COUNT(*) INTO num
+    FROM people_
+    WHERE eyes = color;
+
+    RETURN num;
+END;
+
+$$ LANGUAGE plpgsql;
+
+select get_people_num_by_color('fsd');
+
+select * from people_;
+--10
+CREATE OR REPLACE FUNCTION get_the_youngest() RETURNS INT
+AS $$
+DECLARE
+    person_id INT;
+BEGIN
+    SELECT id INTO person_id
+    FROM people_
+    ORDER BY birth_date DESC
+    LIMIT 1;
+
+    RETURN person_id;
+END
+$$ LANGUAGE plpgsql;
+
+SELECT get_the_youngest();
+
+--11
