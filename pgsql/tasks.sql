@@ -193,17 +193,79 @@ $$ LANGUAGE plpgsql;
 SELECT get_the_youngest();
 
 --11
-CREATE OR REPLACE FUNCTION get_people_by_index(min_index FLOAT) RETURNS SETOF people_ AS
+CREATE OR REPLACE FUNCTION get_people_by_weight_index(min_index FLOAT) RETURNS SETOF people_ AS
 $BODY$
 BEGIN
    RETURN QUERY
         SELECT * FROM people_
         WHERE (people_.weight / (people_.growth * people_.growth)) > min_index;
-
 END
 $BODY$ LANGUAGE plpgsql;
 
-SELECT * FROM get_people_by_index(0.0025);
+SELECT * FROM get_people_by_weight_index(0.0025);
 
 --12
-begin;
+BEGIN;
+
+CREATE TYPE relationship_type AS ENUM ('child', 'parent', 'husband', 'wife', 'brother', 'sister');
+
+CREATE TABLE relationships(
+    relative_1 INT NOT NULL REFERENCES people_(id),
+    relative_2 INT NOT NULL REFERENCES people_(id),
+    rel_type relationship_type NOT NULL
+);
+
+INSERT INTO relationships
+VALUES (3, 4, 'husband'), (4, 3, 'wife');
+
+COMMIT;
+
+
+--13
+CREATE OR REPLACE PROCEDURE add_person(new_person_record people_, new_relation_records relationships[]) AS
+$$
+DECLARE
+    new_person_id INT;
+    r relationships;
+BEGIN
+
+    INSERT INTO people_ (name, surname, birth_date, growth, weight, eyes, hair)
+    VALUES (new_person_record.name, new_person_record.surname,
+            new_person_record.birth_date, new_person_record.growth,
+            new_person_record.weight,
+            new_person_record.eyes,
+            new_person_record.hair);
+
+    SELECT MAX(id) FROM people_ INTO new_person_id;
+
+    FOR r IN SELECT * FROM unnest(new_relation_records) LOOP
+        INSERT INTO relationships(relative_1, relative_2, rel_type)
+        VALUES (new_person_id, r.relative_2, r.rel_type);
+    END LOOP;
+
+END
+$$ LANGUAGE plpgsql;
+
+CALL add_person('(,"john","d", 12-03-1990, 190, 90,"green","black",)',
+
+    ARRAY['(,1,"brother")', '(,2,"brother")']::relationships[]);
+
+--14
+BEGIN;
+
+ALTER TABLE people_
+ADD COLUMN data_of_change DATE DEFAULT CURRENT_DATE;
+
+COMMIT;
+
+
+--15
+CREATE OR REPLACE PROCEDURE update_growth_and_weight(person_id INT, new_growth REAL, new_weight REAL) AS
+$$
+BEGIN
+    UPDATE people_
+    SET growth = new_growth, weight = new_weight, data_of_change = CURRENT_DATE
+    WHERE id = person_id;
+
+END
+$$ LANGUAGE plpgsql
