@@ -9,3 +9,5 @@ INSERT INTO people (name) VALUES
 ('Владимир'), ('Владислав'), ('Даниил');
 
 COMMIT;
+
+select * from schema_migrations

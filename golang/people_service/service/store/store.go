@@ -1,16 +1,20 @@
 package store
 
 import (
-	"context"
 	"fmt"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/pgx"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/golang-migrate/migrate/v4/source/github"
-	"github.com/jackc/pgx/v4"
+	_ "github.com/jackc/pgx/v4"
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/jmoiron/sqlx"
+	"log"
 	"os"
 )
 
 type Store struct {
-	conn *pgx.Conn
+	conn *sqlx.DB
 }
 
 type People struct {
@@ -20,12 +24,26 @@ type People struct {
 
 // NewStore creates new database connection
 func NewStore(connString string) *Store {
-	conn, err := pgx.Connect(context.Background(), connString)
+	conn, err := sqlx.Connect("pgx", connString)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	// make migration
+	driver, err := pgx.WithInstance(conn.DB, &pgx.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance("file://../Golang/HomeWork_db/golang/people_service/migrations/",
+		"postgres", driver)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = m.Up()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return &Store{
 		conn: conn,
@@ -35,23 +53,26 @@ func NewStore(connString string) *Store {
 func (s *Store) ListPeople() ([]People, error) {
 
 	people := make([]People, 0, 0)
+	var id int32
+	var name string
 
-	rows, err := s.conn.Query(context.Background(), "select * from people")
+	rows, err := s.conn.Query("select * from people")
 	if err != nil {
 		return nil, err
 	}
+
 	defer rows.Close()
 
 	for rows.Next() {
 
-		values, err := rows.Values()
+		err := rows.Scan(&id, &name)
 		if err != nil {
 			return nil, fmt.Errorf("error while reding: %d", err)
 		}
 
 		people = append(people, People{
-			ID:   values[0].(int32),
-			Name: values[1].(string),
+			ID:   id,
+			Name: name,
 		})
 	}
 	if err := rows.Err(); err != nil {
@@ -66,7 +87,7 @@ func (s *Store) GetPeopleByID(id string) (People, error) {
 	var name string
 	var _id int32
 
-	row := s.conn.QueryRow(context.Background(), "select * from people where id = "+id)
+	row := s.conn.QueryRow("select * from people where id = " + id)
 
 	err := row.Scan(&_id, &name)
 	if err != nil {

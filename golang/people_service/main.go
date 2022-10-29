@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/PetrDoroshev/HomeWork_db/golang/people_service/service/store"
-	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 func main() {
