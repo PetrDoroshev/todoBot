@@ -10,4 +10,3 @@ INSERT INTO people (name) VALUES
 
 COMMIT;
 
-select * from schema_migrations
