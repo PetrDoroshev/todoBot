@@ -22,7 +22,6 @@ type People struct {
 	Name string
 }
 
-// NewStore creates new database connection
 func NewStore(connString string) *Store {
 	conn, err := sqlx.Connect("pgx", connString)
 	if err != nil {
