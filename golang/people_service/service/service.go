@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-
 	"github.com/PetrDoroshev/HomeWork_db/golang/people_service/service/store"
 )
 

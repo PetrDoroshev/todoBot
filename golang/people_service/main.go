@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/PetrDoroshev/HomeWork_db/golang/people_service/service/store"
-	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 func main() {
@@ -11,9 +10,8 @@ func main() {
 	people, _ := s.ListPeople()
 	fmt.Println(people)
 
-	person, err := s.GetPeopleByID("9")
+	person, _ := s.GetPeopleByID("1")
 
 	fmt.Println(person)
-	fmt.Print(err)
 
 }
