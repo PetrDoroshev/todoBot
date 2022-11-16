@@ -7,45 +7,43 @@ import (
 	"os"
 )
 
-var player creature.Creature
-var scanner *bufio.Scanner
-var time string
-
 func main() {
 
-	scanner = bufio.NewScanner(os.Stdin)
+	scanner := bufio.NewScanner(os.Stdin)
 
-	time = "day"
+	time := "day"
 	gameOver := false
 	cycles := 0
-	player = creature.Creature{HoleLength: 10,
-		Health:  100,
-		Respect: 20,
-		Weight:  30}
+
+	player := creature.New(10, 100, 20, 30)
 
 	for !gameOver {
 
 		if cycles == 5 {
 			cycles = 0
-			timeChange()
+			timeChange(&time, player)
 		}
 
-		showPlayerStats()
-		actionDialog()
+		showPlayerStats(player, time)
+		actionDialog(scanner, player)
 		cycles++
 
-		if player.Health <= 0 || player.HoleLength <= 0 || player.Respect <= 0 || player.Weight <= 0 {
-			gameOver = true
-			fmt.Println("Game over! You lose")
-		} else if player.Respect >= 100 {
-			gameOver = true
-			fmt.Println("Game over. You win!")
-		}
+		checkGameOver(player, &gameOver)
 
 	}
 }
 
-func actionDialog() {
+func checkGameOver(player *creature.Creature, gameOver *bool) {
+	if !player.IsStateOk() {
+		*gameOver = true
+		fmt.Println("Game over! You lose")
+	} else if player.GetRespect() >= 100 {
+		*gameOver = true
+		fmt.Println("Game over. You win!")
+	}
+}
+
+func actionDialog(scanner *bufio.Scanner, player *creature.Creature) {
 	fmt.Println("Actions: \n" +
 		"---------------------")
 	fmt.Println("1. Dig\n" +
@@ -60,21 +58,21 @@ func actionDialog() {
 
 	switch scanner.Text() {
 	case "1":
-		digDialog()
+		digDialog(scanner, player)
 	case "2":
-		eatDialog()
+		eatDialog(scanner, player)
 	case "3":
-		fightDialog()
+		fightDialog(scanner, player)
 	case "4":
 		player.Sleep()
 		fmt.Println("")
-		fmt.Println("You has slept. Hole length - 2, Health + 20, Respect - 2, Weight - 5")
+		fmt.Println("You has slept. Hole length - 2, health + 20, respect - 2, weight - 5")
 	default:
 		fmt.Println("Unknown command")
 	}
 }
 
-func digDialog() {
+func digDialog(scanner *bufio.Scanner, player *creature.Creature) {
 	fmt.Println("")
 	fmt.Println("Dig intensively?")
 	fmt.Print("Enter y or n: ")
@@ -91,7 +89,7 @@ func digDialog() {
 	}
 }
 
-func eatDialog() {
+func eatDialog(scanner *bufio.Scanner, player *creature.Creature) {
 	fmt.Println("")
 	fmt.Println("Eat: green(1) or withered(2) grass?")
 	fmt.Print("Enter 1 or 2: ")
@@ -109,59 +107,59 @@ func eatDialog() {
 	}
 }
 
-func fightDialog() {
+func fightDialog(scanner *bufio.Scanner, player *creature.Creature) {
 	fmt.Println("")
 	fmt.Println("Choose your enemy.")
 	fmt.Println("Fight with weak(1), average(2) or strong(3) creature?")
 	fmt.Print("Enter: ")
 
-	r := player.Respect
-	h := player.Health
-	enemy := creature.Creature{HoleLength: 0, Health: 100, Respect: 0, Weight: 0}
+	r := player.GetRespect()
+	h := player.GetHealth()
+	enemy := creature.New(0, 100, 0, 0)
 
 	scanner.Scan()
 
 	switch scanner.Text() {
 	case "1":
-		enemy.Weight = 30
+		enemy.SetWeight(30)
 	case "2":
-		enemy.Weight = 50
+		enemy.SetWeight(50)
 	case "3":
-		enemy.Weight = 70
+		enemy.SetWeight(70)
 	default:
 		fmt.Println("Unknown command")
 	}
 
 	if player.FightWith(enemy) {
 		fmt.Println("")
-		fmt.Printf("You win. Respect + %d, Health - %d\n", player.Respect-r, h-player.Health)
+		fmt.Printf("You win. respect + %d, health - %d\n", player.GetRespect()-r, h-player.GetHealth())
 	} else {
 		fmt.Println("")
-		fmt.Printf("You lose. Health - %d\n", h-player.Health)
+		fmt.Printf("You lose. health - %d\n", h-player.GetHealth())
 	}
 }
 
-func showPlayerStats() {
+func showPlayerStats(player *creature.Creature, time string) {
 	fmt.Println("")
 	fmt.Println("Player stats: ")
 	fmt.Printf("------------------------------------------------------------\n"+
-		"| Hole length: %d | Health: %d | Respect: %d | Weight: %d |\n"+
+		"| Hole length: %d | health: %d | respect: %d | weight: %d |\n"+
 		"Time: %s\n"+
 		"------------------------------------------------------------\n",
-		player.HoleLength, player.Health, player.Respect, player.Weight, time)
+		player.GetHoleLength(), player.GetHealth(), player.GetRespect(), player.GetWeight(), time)
 	fmt.Println()
 
 }
 
-func timeChange() {
-	if time == "day" {
+func timeChange(time *string, player *creature.Creature) {
+	if *time == "day" {
 		fmt.Println("")
-		fmt.Println("Night has come. Hole length - 2, Health + 20, Respect - 2, Weight - 5")
-		time = "night"
+		fmt.Println("Night has come. Hole length - 2, health + 20, respect - 2, weight - 5")
+		*time = "night"
 		player.Sleep()
 	} else {
 		fmt.Println("")
 		fmt.Println("Day has come")
-		time = "day"
+		*time = "day"
 	}
 }
