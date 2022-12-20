@@ -1,0 +1,31 @@
+version: '2.4'
+services:
+  postgres:
+    image: postgres:15.1
+    container_name: todolist-postgres
+
+    logging:
+      driver: json-file
+      options:
+        max-size: '100m'
+        max-file: '5'
+
+    environment:
+      - POSTGRES_DB=doroshev
+      - POSTGRES_USER=doroshev
+      - POSTGRES_PASSWORD=doroshev
+
+  todo_list:
+    build:
+      context: .
+    image: todo_list:latest
+    container_name: todo_list
+    hostname: todo_list
+    environment:
+      - TOKEN=5633169172:AAHFctvC8ywbKRqeRXiZb-hVMXtwpUXUEYA
+      - DBNAME=doroshev
+      - PASSWORD=doroshev
+      - HOST=95.217.232.188
+      - USER=doroshev
+      - PORT=7777
+
