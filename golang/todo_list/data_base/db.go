@@ -3,6 +3,8 @@ package data_base
 import (
 	"database/sql"
 	"fmt"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/lib/pq"
 	"log"
 	"os"
@@ -29,6 +31,21 @@ var dbInfo = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", os.Get
 
 func NewDB() *DB {
 	conn, err := sql.Open("postgres", dbInfo)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	driver, err := postgres.WithInstance(conn, &postgres.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance("file://../../go/build/todo_list/migrations/1_initial.up.sql", "postgres", driver)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = m.Up()
 	if err != nil {
 		log.Fatal(err)
 	}
