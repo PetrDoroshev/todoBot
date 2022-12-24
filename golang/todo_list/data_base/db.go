@@ -3,8 +3,6 @@ package data_base
 import (
 	"database/sql"
 	"fmt"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/lib/pq"
 	"log"
 	"os"
@@ -19,7 +17,7 @@ type Task struct {
 	UserID      int64
 	Description string
 	Priority    string
-	NotifyTime  string
+	NotifyTime  *string
 	Status      string
 }
 
@@ -35,20 +33,22 @@ func NewDB() *DB {
 		log.Fatal(err)
 	}
 
-	driver, err := postgres.WithInstance(conn, &postgres.Config{})
-	if err != nil {
-		log.Fatal(err)
-	}
+	/*
+		driver, err := postgres.WithInstance(conn, &postgres.Config{})
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	m, err := migrate.NewWithDatabaseInstance("file://../../go/build/todo_list/migrations/1_initial.up.sql", "postgres", driver)
-	if err != nil {
-		log.Fatal(err)
-	}
+		m, err := migrate.NewWithDatabaseInstance("file://../../go/build/todo_list/migrations/1_initial.up.sql", "postgres", driver)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	err = m.Up()
-	if err != nil {
-		log.Fatal(err)
-	}
+		err = m.Up()
+		if err != nil {
+			log.Fatal(err)
+		}
+	*/
 
 	return &DB{conn: conn}
 }
@@ -63,17 +63,10 @@ func (db *DB) CloseDB() {
 
 func (db *DB) AddNewTask(newTask *Task) error {
 
-	var err error
-	if newTask.NotifyTime != "" {
+	insertStatement := "INSERT INTO tasks(user_id, description, priority, notify_time, status) VALUES ($1, $2, $3, $4, $5)"
+	_, err := db.conn.Exec(insertStatement, newTask.UserID, newTask.Description, newTask.Priority,
+		newTask.NotifyTime, newTask.Status)
 
-		insertStatement := "INSERT INTO tasks(user_id, description, priority, notify_time, status) VALUES ($1, $2, $3, $4, $5)"
-		_, err = db.conn.Exec(insertStatement, newTask.UserID, newTask.Description, newTask.Priority,
-			newTask.NotifyTime, newTask.Status)
-
-	} else {
-		insertStatement := "INSERT INTO tasks(user_id, description, priority, status) VALUES ($1, $2, $3, $4)"
-		_, err = db.conn.Exec(insertStatement, newTask.UserID, newTask.Description, newTask.Priority, newTask.Status)
-	}
 	if err != nil {
 		return fmt.Errorf("unable to insert new task: %w", err)
 	}
@@ -93,9 +86,19 @@ func (db *DB) ListUserTasks(userID int64) ([]Task, error) {
 
 	for rows.Next() {
 		var t Task
-		rows.Scan(&t.TaskID, &t.UserID, &t.Description, &t.Priority, &t.NotifyTime, &t.Status)
+		err = rows.Scan(&t.TaskID, &t.UserID, &t.Description, &t.Priority, &t.NotifyTime, &t.Status)
+
+		if err != nil {
+			return nil, fmt.Errorf("unable to scan data to struct: %w", err)
+		}
+
 		taskList = append(taskList, t)
 	}
+
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("scan failed: %w", err)
+	}
+
 	return taskList, nil
 }
 
@@ -110,9 +113,19 @@ func (db *DB) ListTaskWithPriority(userID int64, priority string) ([]Task, error
 
 	for rows.Next() {
 		t := Task{}
-		rows.Scan(&t.TaskID, &t.UserID, &t.Description, &t.Priority, &t.NotifyTime, &t.Status)
+		err = rows.Scan(&t.TaskID, &t.UserID, &t.Description, &t.Priority, &t.NotifyTime, &t.Status)
+
+		if err != nil {
+			return nil, fmt.Errorf("unable to scan data to struct: %w", err)
+		}
+
 		taskList = append(taskList, t)
 	}
+
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("scan failed: %w", err)
+	}
+
 	return taskList, nil
 }
 
@@ -127,9 +140,19 @@ func (db *DB) ListFinishedTasks(userID int64) ([]Task, error) {
 
 	for rows.Next() {
 		t := Task{}
-		rows.Scan(&t.TaskID, &t.UserID, &t.Description, &t.Priority, &t.NotifyTime, &t.Status)
+		err = rows.Scan(&t.TaskID, &t.UserID, &t.Description, &t.Priority, &t.NotifyTime, &t.Status)
+
+		if err != nil {
+			return nil, fmt.Errorf("unable to scan data: %w", err)
+		}
+
 		taskList = append(taskList, t)
 	}
+
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("scan failed: %w", err)
+	}
+
 	return taskList, nil
 }
 

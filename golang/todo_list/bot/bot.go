@@ -117,7 +117,7 @@ func (bot *Bot) BotLoop() {
 				bot.userTask[update.CallbackQuery.Message.Chat.ID].Status = "in work"
 				err := bot.todoList.AddNewTask(bot.userTask[update.CallbackQuery.Message.Chat.ID])
 
-				if bot.userTask[update.CallbackQuery.Message.Chat.ID].NotifyTime != "" {
+				if bot.userTask[update.CallbackQuery.Message.Chat.ID].NotifyTime != nil {
 					bot.notifiedTasks = append(bot.notifiedTasks, *bot.userTask[update.CallbackQuery.Message.Chat.ID])
 				}
 
@@ -137,7 +137,7 @@ func (bot *Bot) checkTasks() {
 
 	now := time.Now().Format(layout)
 	for i, task := range bot.notifiedTasks {
-		if task.NotifyTime == now {
+		if *task.NotifyTime == now {
 			bot.sendMessage(task.UserID, fmt.Sprintf("You have unfisnished task: %s", task.Description))
 			bot.notifiedTasks[i] = bot.notifiedTasks[len(bot.notifiedTasks)-1]
 			bot.notifiedTasks = bot.notifiedTasks[:len(bot.notifiedTasks)-1]
@@ -166,8 +166,8 @@ func (bot *Bot) showTasks(chatID int64, m string) {
 	msg := "Todo list: \n\n"
 	for i, task := range tasks {
 		msg += fmt.Sprintf("%d. %s\n\t\t\t priority: %s\n", i+1, task.Description, task.Priority)
-		if task.NotifyTime != "" {
-			t, _ := time.Parse("2006-01-02T15:04:05Z", task.NotifyTime)
+		if task.NotifyTime != nil {
+			t, _ := time.Parse("2006-01-02T15:04:05Z", *task.NotifyTime)
 			msg += "\t\t\t notify date: " + t.Format(layout) + "\n"
 		}
 		msg += "\n"
@@ -206,14 +206,19 @@ func (bot *Bot) enterPriorityDialog(chatID int64, m string) {
 func (bot *Bot) enterDateDialog(chatID int64, m string) {
 	if m == "skip" || checkDateFormat(m) {
 		if m != "skip" {
-			bot.userTask[chatID].NotifyTime = m
+			bot.userTask[chatID].NotifyTime = &m
 		}
 		delete(bot.userState, chatID)
+
+		nt := ""
+		if bot.userTask[chatID].NotifyTime != nil {
+			nt = *bot.userTask[chatID].NotifyTime
+		}
 
 		text := fmt.Sprintf("%s\nPritority: %s\nNotify time: %s\nStatus: %s\n",
 			bot.userTask[chatID].Description,
 			bot.userTask[chatID].Priority,
-			bot.userTask[chatID].NotifyTime,
+			nt,
 			bot.userTask[chatID].Status)
 
 		button := tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(
