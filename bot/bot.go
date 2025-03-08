@@ -2,7 +2,7 @@ package bot
 
 import (
 	"fmt"
-	"github.com/PetrDoroshev/HomeWork_db/golang/todo_list/data_base"
+	"github.com/PetrDoroshev/todoBot/data_base"
 	_ "github.com/Syfaro/telegram-bot-api"
 	"github.com/go-co-op/gocron"
 	_ "github.com/go-co-op/gocron"
