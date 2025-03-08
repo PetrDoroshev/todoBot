@@ -1,9 +1,8 @@
 package main
 
 import (
-	"github.com/PetrDoroshev/HomeWork_db/golang/todo_list/bot"
-	_ "github.com/PetrDoroshev/HomeWork_db/golang/todo_list/bot"
-	"github.com/PetrDoroshev/HomeWork_db/golang/todo_list/data_base"
+	"github.com/PetrDoroshev/todoBot/bot"
+	"github.com/PetrDoroshev/todoBot/data_base"
 )
 
 func main() {
