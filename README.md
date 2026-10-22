@@ -119,7 +119,3 @@ The initial migration creates a `tasks` table with these fields:
 - PostgreSQL access is implemented with `database/sql` and `lib/pq`.
 - Migrations are applied through `golang-migrate`.
 - The current code keeps the migration file path in `data_base/db.go` as a hard-coded filesystem path. Before running the application from a different directory layout or inside the release container, verify that this path points to `migrations/1_initial.up.sql`.
-
-## License
-
-No license has been specified yet.
